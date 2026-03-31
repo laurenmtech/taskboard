@@ -146,16 +146,22 @@ export function BoardSelectorPage({
   const [isCreating, setIsCreating] = useState(false)
   const [creatingType, setCreatingType] = useState<'personal' | 'group' | null>(null)
 
-  async function handleCreateBoard(type: 'personal' | 'group') {
-    setIsCreating(true)
+  function openCreateForm(type: 'personal' | 'group') {
     setCreatingType(type)
-    const handler = type === 'personal' ? onCreatePersonalBoard : onCreateGroupBoard
+    setNewBoardName('')
+  }
+
+  async function handleCreateBoard() {
+    if (!creatingType) return
+    
+    setIsCreating(true)
+    const handler = creatingType === 'personal' ? onCreatePersonalBoard : onCreateGroupBoard
     const ok = await handler(newBoardName)
     if (ok) {
       setNewBoardName('')
+      setCreatingType(null)
     }
     setIsCreating(false)
-    setCreatingType(null)
   }
 
   return (
@@ -213,7 +219,7 @@ export function BoardSelectorPage({
               onChange={(event) => setNewBoardName(event.target.value)}
               onKeyDown={(event) => {
                 if (event.key === 'Enter') {
-                  void handleCreateBoard(creatingType)
+                  void handleCreateBoard()
                 } else if (event.key === 'Escape') {
                   setCreatingType(null)
                   setNewBoardName('')
@@ -224,7 +230,7 @@ export function BoardSelectorPage({
             />
             <button
               className="btn btn-primary"
-              onClick={() => void handleCreateBoard(creatingType)}
+              onClick={() => void handleCreateBoard()}
               disabled={isCreating || !newBoardName.trim()}
             >
               {isCreating ? 'Creating...' : 'Create'}
@@ -257,12 +263,12 @@ export function BoardSelectorPage({
                 <span>{personalBoards.length}</span>
                 <button
                   className="btn btn-secondary"
-                  onClick={() => void handleCreateBoard('personal')}
+                  onClick={() => openCreateForm('personal')}
                   disabled={isCreating}
                   title="Create a new personal board"
                   style={{ padding: '0.4rem 0.6rem', fontSize: '0.875rem' }}
                 >
-                  {isCreating && creatingType === 'personal' ? '...' : '+'}
+                  +
                 </button>
               </div>
             </div>
@@ -291,12 +297,12 @@ export function BoardSelectorPage({
               <span>{groupBoards.length}</span>
               <button
                 className="btn btn-secondary"
-                onClick={() => void handleCreateBoard('group')}
+                onClick={() => openCreateForm('group')}
                 disabled={isCreating}
                 title="Create a new group board"
                 style={{ padding: '0.4rem 0.6rem', fontSize: '0.875rem' }}
               >
-                {isCreating && creatingType === 'group' ? '...' : '+'}
+                +
               </button>
             </div>
           </div>
