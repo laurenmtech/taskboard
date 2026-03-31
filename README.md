@@ -58,7 +58,7 @@ Set:
 
 ```env
 VITE_SUPABASE_URL=https://YOUR_PROJECT_ID.supabase.co
-VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY=YOUR_SUPABASE_ANON_KEY
+VITE_SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY
 ```
 
 Important:
@@ -176,7 +176,7 @@ For Vercel / Netlify / Cloudflare Pages:
 
 - Build command: npm run build
 - Output directory: dist
-- Set VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY
+- Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY
 
 ## Troubleshooting
 
