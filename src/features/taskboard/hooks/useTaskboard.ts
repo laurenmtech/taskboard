@@ -72,6 +72,7 @@ export function useTaskboard() {
   const [isCheckingSession, setIsCheckingSession] = useState(true)
   const [existingSessionUserId, setExistingSessionUserId] = useState<string | null>(null)
   const [isCreatingTask, setIsCreatingTask] = useState(false)
+  const [editingTaskId, setEditingTaskId] = useState<string | null>(null)
   const [isSavingTask, setIsSavingTask] = useState(false)
   const [isSimulatingAuth, setIsSimulatingAuth] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -755,30 +756,121 @@ export function useTaskboard() {
     setIsSavingTask(true)
     setError(null)
 
-    const { data, error: createError } = await supabase
-      .from('tasks')
-      .insert({
-        title: formState.title.trim(),
-        description: formState.description.trim() || null,
-        status: 'todo',
-        priority: formState.priority,
-        due_date: formState.due_date || null,
-        workspace_id: activeWorkspaceId,
-        user_id: activeUserId,
-      })
-      .select('*')
-      .single()
+    if (editingTaskId) {
+      const { data, error: updateError } = await supabase
+        .from('tasks')
+        .update({
+          title: formState.title.trim(),
+          description: formState.description.trim() || null,
+          priority: formState.priority,
+          due_date: formState.due_date || null,
+        })
+        .eq('id', editingTaskId)
+        .eq('workspace_id', activeWorkspaceId)
+        .eq('user_id', activeUserId)
+        .select('*')
+        .single()
 
-    if (createError) {
-      setError(`Could not create task: ${formatDatabaseError(createError.message)}`)
-      setIsSavingTask(false)
+      if (updateError) {
+        setError(`Could not update task: ${formatDatabaseError(updateError.message)}`)
+        setIsSavingTask(false)
+        return false
+      }
+
+      setTasks((current) =>
+        current.map((task) => (task.id === editingTaskId ? ({ ...task, ...(data as Task) } as Task) : task)),
+      )
+    } else {
+      const { data, error: createError } = await supabase
+        .from('tasks')
+        .insert({
+          title: formState.title.trim(),
+          description: formState.description.trim() || null,
+          status: 'todo',
+          priority: formState.priority,
+          due_date: formState.due_date || null,
+          workspace_id: activeWorkspaceId,
+          user_id: activeUserId,
+        })
+        .select('*')
+        .single()
+
+      if (createError) {
+        setError(`Could not create task: ${formatDatabaseError(createError.message)}`)
+        setIsSavingTask(false)
+        return false
+      }
+
+      setTasks((current) => [data as Task, ...current])
+    }
+
+    setFormState(initialFormState)
+    setEditingTaskId(null)
+    setIsCreatingTask(false)
+    setIsSavingTask(false)
+    return true
+  }
+
+  function openCreateTaskModal() {
+    setEditingTaskId(null)
+    setFormState(initialFormState)
+    setError(null)
+    setIsCreatingTask(true)
+  }
+
+  function openEditTaskModal(task: Task) {
+    setEditingTaskId(task.id)
+    setFormState({
+      title: task.title,
+      description: task.description ?? '',
+      priority: task.priority,
+      due_date: task.due_date ?? '',
+    })
+    setError(null)
+    setIsCreatingTask(true)
+  }
+
+  function closeTaskModal() {
+    setIsCreatingTask(false)
+    setEditingTaskId(null)
+    setFormState(initialFormState)
+  }
+
+  async function deleteTask(taskId: string) {
+    const activeUserId = userId ?? (await ensureUserSession())
+    if (!activeUserId || !activeWorkspaceId) {
       return false
     }
 
-    setTasks((current) => [data as Task, ...current])
-    setFormState(initialFormState)
-    setIsCreatingTask(false)
-    setIsSavingTask(false)
+    const task = tasks.find((item) => item.id === taskId)
+    if (!task) {
+      setError('Task not found.')
+      return false
+    }
+
+    const confirmed = window.confirm(`Delete "${task.title}"? This cannot be undone.`)
+    if (!confirmed) {
+      return false
+    }
+
+    setError(null)
+
+    const { error: deleteError } = await supabase
+      .from('tasks')
+      .delete()
+      .eq('id', taskId)
+      .eq('workspace_id', activeWorkspaceId)
+      .eq('user_id', activeUserId)
+
+    if (deleteError) {
+      setError(`Could not delete task: ${formatDatabaseError(deleteError.message)}`)
+      return false
+    }
+
+    setTasks((current) => current.filter((item) => item.id !== taskId))
+    if (editingTaskId === taskId) {
+      closeTaskModal()
+    }
     return true
   }
 
@@ -942,6 +1034,7 @@ export function useTaskboard() {
     activeTask,
     filteredTasks,
     isCreatingTask,
+    editingTaskId,
     isSavingTask,
     isSimulatingAuth,
     formState,
@@ -950,6 +1043,9 @@ export function useTaskboard() {
     setViewMode,
     setIsCreatingTask,
     updateFormState,
+    openCreateTaskModal,
+    openEditTaskModal,
+    closeTaskModal,
     bootstrapSession,
     openWorkspace,
     refreshCurrentWorkspace,
@@ -960,6 +1056,7 @@ export function useTaskboard() {
     goToBoardPicker,
     goToLanding,
     createTask,
+    deleteTask,
     simulateTeamMembers,
     simulateNewGuestSignIn,
     handleDragStart,

@@ -42,6 +42,8 @@ type WorkspaceViewProps = {
   onDragStart: (taskId: string) => void
   onDragEnd: (activeId: string, overId: string | null) => Promise<void>
   onTeamDragEnd: (activeId: string, overId: string | null) => Promise<void>
+  onEditTask: (task: Task) => void
+  onDeleteTask: (taskId: string) => void
 }
 
 export function WorkspaceView({
@@ -66,6 +68,8 @@ export function WorkspaceView({
   onDragStart,
   onDragEnd,
   onTeamDragEnd,
+  onEditTask,
+  onDeleteTask,
 }: WorkspaceViewProps) {
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -201,6 +205,8 @@ export function WorkspaceView({
             tasks={tasks}
             filteredTaskCount={filteredTaskCount}
             workspaceMembers={workspaceMembers}
+            onEditTask={onEditTask}
+            onDeleteTask={onDeleteTask}
           />
 
           <DragOverlay>{activeTask ? <TaskCardOverlay task={activeTask} /> : null}</DragOverlay>
@@ -236,7 +242,9 @@ export function WorkspaceView({
                       {columnTasks.length === 0 ? (
                         <div className="empty-state">Drop a task here</div>
                       ) : (
-                        columnTasks.map((task) => <TaskCard key={task.id} task={task} />)
+                        columnTasks.map((task) => (
+                          <TaskCard key={task.id} task={task} onEdit={onEditTask} onDelete={onDeleteTask} />
+                        ))
                       )}
                     </ColumnDropZone>
                   </SortableContext>

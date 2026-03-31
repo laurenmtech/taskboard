@@ -66,22 +66,28 @@ export default function App() {
         onBackToBoards={taskboard.goToBoardPicker}
         onSimulateTeamMembers={taskboard.simulateTeamMembers}
         onRefresh={() => void taskboard.refreshCurrentWorkspace()}
-        onOpenCreateTask={() => taskboard.setIsCreatingTask(true)}
+        onOpenCreateTask={taskboard.openCreateTaskModal}
         onSearchChange={taskboard.setSearch}
         onPriorityFilterChange={taskboard.setPriorityFilter}
         onViewModeChange={taskboard.setViewMode}
         onDragStart={taskboard.handleDragStart}
         onDragEnd={taskboard.handleDragEnd}
         onTeamDragEnd={taskboard.handleTeamDragEnd}
+        onEditTask={taskboard.openEditTaskModal}
+        onDeleteTask={(taskId) => {
+          void taskboard.deleteTask(taskId)
+        }}
       />
 
       <CreateTaskModal
         isOpen={taskboard.isCreatingTask}
         isSavingTask={taskboard.isSavingTask}
+        isEditingTask={!!taskboard.editingTaskId}
         error={taskboard.error}
         formState={taskboard.formState}
-        onClose={() => taskboard.setIsCreatingTask(false)}
+        onClose={taskboard.closeTaskModal}
         onSubmit={taskboard.createTask}
+        onDeleteTask={() => taskboard.deleteTask(taskboard.editingTaskId ?? '')}
         onUpdateForm={taskboard.updateFormState}
       />
     </>

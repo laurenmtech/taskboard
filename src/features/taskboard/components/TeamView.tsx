@@ -9,6 +9,8 @@ type TeamViewProps = {
   tasks: Task[]
   filteredTaskCount: number
   workspaceMembers: { id: string; display_name: string | null }[]
+  onEditTask: (task: Task) => void
+  onDeleteTask: (taskId: string) => void
 }
 
 function TeamColumnDropZone({
@@ -31,6 +33,8 @@ export function TeamView({
   tasks,
   filteredTaskCount,
   workspaceMembers,
+  onEditTask,
+  onDeleteTask,
 }: TeamViewProps) {
   // Group tasks by assignee
   const tasksByAssignee = workspaceMembers.reduce(
@@ -61,7 +65,9 @@ export function TeamView({
             {unassignedTasks.length === 0 ? (
               <p className="empty-state">Drop a task here</p>
             ) : (
-              unassignedTasks.map((task) => <TaskCard key={task.id} task={task} />)
+              unassignedTasks.map((task) => (
+                <TaskCard key={task.id} task={task} onEdit={onEditTask} onDelete={onDeleteTask} />
+              ))
             )}
           </TeamColumnDropZone>
         </SortableContext>
@@ -87,7 +93,9 @@ export function TeamView({
                 {memberTasks.length === 0 ? (
                   <p className="empty-state">Drop a task here</p>
                 ) : (
-                  memberTasks.map((task) => <TaskCard key={task.id} task={task} />)
+                  memberTasks.map((task) => (
+                    <TaskCard key={task.id} task={task} onEdit={onEditTask} onDelete={onDeleteTask} />
+                  ))
                 )}
               </TeamColumnDropZone>
             </SortableContext>

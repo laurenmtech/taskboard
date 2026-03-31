@@ -4,20 +4,24 @@ import type { TaskFormState, TaskPriority } from '../types'
 type CreateTaskModalProps = {
   isOpen: boolean
   isSavingTask: boolean
+  isEditingTask: boolean
   error: string | null
   formState: TaskFormState
   onClose: () => void
   onSubmit: () => Promise<unknown>
+  onDeleteTask: () => Promise<unknown>
   onUpdateForm: <K extends keyof TaskFormState>(key: K, value: TaskFormState[K]) => void
 }
 
 export function CreateTaskModal({
   isOpen,
   isSavingTask,
+  isEditingTask,
   error,
   formState,
   onClose,
   onSubmit,
+  onDeleteTask,
   onUpdateForm,
 }: CreateTaskModalProps) {
   if (!isOpen) {
@@ -38,7 +42,7 @@ export function CreateTaskModal({
         aria-labelledby="create-task-title"
         onClick={(event) => event.stopPropagation()}
       >
-        <h3 id="create-task-title">Create Task</h3>
+        <h3 id="create-task-title">{isEditingTask ? 'Edit Task' : 'Create Task'}</h3>
         {error && (
           <p className="modal-error" role="alert" aria-live="assertive">
             {error}
@@ -85,11 +89,16 @@ export function CreateTaskModal({
             </label>
           </div>
           <footer className="modal-actions">
+            {isEditingTask && (
+              <button type="button" className="btn btn-secondary" onClick={() => void onDeleteTask()}>
+                Delete Task
+              </button>
+            )}
             <button type="button" className="btn btn-secondary" onClick={onClose}>
               Cancel
             </button>
             <button type="submit" className="btn btn-primary" disabled={isSavingTask}>
-              {isSavingTask ? 'Saving...' : 'Create Task'}
+              {isSavingTask ? 'Saving...' : isEditingTask ? 'Save Changes' : 'Create Task'}
             </button>
           </footer>
         </form>

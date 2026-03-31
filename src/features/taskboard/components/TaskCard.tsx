@@ -4,7 +4,13 @@ import clsx from 'clsx'
 import { format, formatDistanceToNow, isBefore } from 'date-fns'
 import type { Task } from '../types'
 
-export function TaskCard({ task }: { task: Task }) {
+type TaskCardProps = {
+  task: Task
+  onEdit: (task: Task) => void
+  onDelete: (taskId: string) => void
+}
+
+export function TaskCard({ task, onEdit, onDelete }: TaskCardProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: task.id })
 
@@ -35,6 +41,32 @@ export function TaskCard({ task }: { task: Task }) {
         <span className={clsx('priority-pill', `priority-${task.priority}`)}>{task.priority}</span>
       </div>
       {task.description && <p>{task.description}</p>}
+      <div className="task-card-actions">
+        <button
+          type="button"
+          className="task-link-btn"
+          onPointerDown={(event) => event.stopPropagation()}
+          onClick={(event) => {
+            event.stopPropagation()
+            onEdit(task)
+          }}
+          aria-label={`Edit ${task.title}`}
+        >
+          Edit
+        </button>
+        <button
+          type="button"
+          className="task-link-btn task-link-btn-danger"
+          onPointerDown={(event) => event.stopPropagation()}
+          onClick={(event) => {
+            event.stopPropagation()
+            onDelete(task.id)
+          }}
+          aria-label={`Delete ${task.title}`}
+        >
+          Delete
+        </button>
+      </div>
       <footer className="task-card-footer">
         {dueDate && <span className={clsx('due-pill', isOverdue && 'due-overdue')}>{dueBadge}</span>}
         <time dateTime={task.created_at}>{format(new Date(task.created_at), 'MMM d')}</time>

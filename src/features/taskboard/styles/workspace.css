@@ -236,6 +236,37 @@
   font-size: 0.9rem;
 }
 
+.task-card-actions {
+  display: flex;
+  gap: 0.45rem;
+  margin: 0 0 0.55rem;
+}
+
+.task-link-btn {
+  border: 1px solid #d7e8d9;
+  background: #f8fffa;
+  color: #2f5b46;
+  border-radius: 999px;
+  padding: 0.18rem 0.55rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.task-link-btn:hover {
+  background: #eefaf1;
+}
+
+.task-link-btn-danger {
+  border-color: #f1c8c7;
+  background: #fff6f6;
+  color: #9b3a3a;
+}
+
+.task-link-btn-danger:hover {
+  background: #ffecec;
+}
+
 .task-card-footer {
   display: flex;
   justify-content: space-between;
