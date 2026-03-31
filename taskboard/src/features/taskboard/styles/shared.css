@@ -1,0 +1,140 @@
+.btn {
+  border: 1px solid transparent;
+  border-radius: 12px;
+  padding: 0.58rem 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 150ms ease, box-shadow 200ms ease, filter 200ms ease;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+  filter: saturate(1.04);
+}
+
+.btn:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+.board-card:focus-visible,
+.task-card:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--brand) 65%, white 35%);
+  outline-offset: 2px;
+}
+
+.btn-primary {
+  color: #fff;
+  background: linear-gradient(140deg, var(--brand), var(--brand-strong));
+  box-shadow: 0 8px 20px rgba(231, 82, 86, 0.3);
+}
+
+.btn-secondary {
+  color: #3d5966;
+  background: linear-gradient(140deg, var(--spring-sky), #eefaf7);
+  border-color: #b7deef;
+}
+
+.btn-danger {
+  color: #fff;
+  background: linear-gradient(140deg, #ff6b6b, #ff5252);
+  box-shadow: 0 8px 20px rgba(255, 107, 107, 0.25);
+  font-size: 0.9rem;
+}
+
+.btn-danger:hover {
+  filter: saturate(1.08) brightness(1.02);
+}
+
+.eyebrow {
+  margin: 0;
+  color: #ca5f3e;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+}
+
+.error-banner {
+  margin: 0;
+  background: #fff0f2;
+  border: 1px solid #f8c4ca;
+  color: #9a2942;
+  border-radius: 10px;
+  padding: 0.6rem 0.75rem;
+}
+
+.notice-banner {
+  margin: 0;
+  background: #edfdf4;
+  border: 1px solid #bde9cd;
+  color: #256647;
+  border-radius: 10px;
+  padding: 0.6rem 0.75rem;
+}
+
+.loading-state,
+.no-results {
+  border: 1px dashed #bddbc5;
+  border-radius: 14px;
+  padding: 1.6rem;
+  text-align: center;
+  color: var(--muted);
+}
+
+.loading-state {
+  display: grid;
+  justify-items: center;
+  gap: 0.4rem;
+}
+
+.spinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid #ffd8bf;
+  border-top-color: var(--brand);
+  border-radius: 50%;
+  animation: spin 700ms linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes enter {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .btn:hover {
+    transform: none;
+  }
+}
