@@ -14,6 +14,7 @@ type BoardSelectorPageProps = {
   onOpenBoard: (workspaceId: string) => void
   onBackToLanding: () => void
   onCreateGroupBoard: (boardName: string) => Promise<boolean>
+  onCreatePersonalBoard: (boardName: string) => Promise<boolean>
   onAcceptInvite: (inviteId: string) => Promise<boolean>
   onDeleteBoard: (workspaceId: string) => Promise<boolean>
 }
@@ -137,19 +138,24 @@ export function BoardSelectorPage({
   onOpenBoard,
   onBackToLanding,
   onCreateGroupBoard,
+  onCreatePersonalBoard,
   onAcceptInvite,
   onDeleteBoard,
 }: BoardSelectorPageProps) {
-  const [newGroupName, setNewGroupName] = useState('')
-  const [isCreatingGroup, setIsCreatingGroup] = useState(false)
+  const [newBoardName, setNewBoardName] = useState('')
+  const [isCreating, setIsCreating] = useState(false)
+  const [creatingType, setCreatingType] = useState<'personal' | 'group' | null>(null)
 
-  async function handleCreateGroupBoard() {
-    setIsCreatingGroup(true)
-    const ok = await onCreateGroupBoard(newGroupName)
+  async function handleCreateBoard(type: 'personal' | 'group') {
+    setIsCreating(true)
+    setCreatingType(type)
+    const handler = type === 'personal' ? onCreatePersonalBoard : onCreateGroupBoard
+    const ok = await handler(newBoardName)
     if (ok) {
-      setNewGroupName('')
+      setNewBoardName('')
     }
-    setIsCreatingGroup(false)
+    setIsCreating(false)
+    setCreatingType(null)
   }
 
   return (
@@ -196,25 +202,46 @@ export function BoardSelectorPage({
         )}
       </section>
 
-      <section className="board-list-section">
-        <div className="board-list-header">
-          <h2>Create Group Board</h2>
-        </div>
-        <div className="create-group-row">
-          <input
-            value={newGroupName}
-            onChange={(event) => setNewGroupName(event.target.value)}
-            placeholder="Team Planning Board"
-          />
-          <button
-            className="btn btn-primary"
-            onClick={() => void handleCreateGroupBoard()}
-            disabled={isCreatingGroup}
-          >
-            {isCreatingGroup ? 'Creating...' : 'Create Group Board'}
-          </button>
-        </div>
-      </section>
+      {creatingType && (
+        <section className="board-list-section">
+          <div className="board-list-header">
+            <h2>{creatingType === 'personal' ? 'Create Personal Board' : 'Create Group Board'}</h2>
+          </div>
+          <div className="create-group-row">
+            <input
+              value={newBoardName}
+              onChange={(event) => setNewBoardName(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') {
+                  void handleCreateBoard(creatingType)
+                } else if (event.key === 'Escape') {
+                  setCreatingType(null)
+                  setNewBoardName('')
+                }
+              }}
+              placeholder={`Enter ${creatingType} board name...`}
+              autoFocus
+            />
+            <button
+              className="btn btn-primary"
+              onClick={() => void handleCreateBoard(creatingType)}
+              disabled={isCreating || !newBoardName.trim()}
+            >
+              {isCreating ? 'Creating...' : 'Create'}
+            </button>
+            <button
+              className="btn btn-secondary"
+              onClick={() => {
+                setCreatingType(null)
+                setNewBoardName('')
+              }}
+              disabled={isCreating}
+            >
+              Cancel
+            </button>
+          </div>
+        </section>
+      )}
 
       {isLoading ? (
         <section className="loading-state">
@@ -226,7 +253,18 @@ export function BoardSelectorPage({
           <section className="board-list-section">
             <div className="board-list-header">
               <h2>Personal Boards</h2>
-              <span>{personalBoards.length}</span>
+              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                <span>{personalBoards.length}</span>
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => void handleCreateBoard('personal')}
+                  disabled={isCreating}
+                  title="Create a new personal board"
+                  style={{ padding: '0.4rem 0.6rem', fontSize: '0.875rem' }}
+                >
+                  {isCreating && creatingType === 'personal' ? '...' : '+'}
+                </button>
+              </div>
             </div>
 
             {personalBoards.length === 0 ? (
@@ -245,11 +283,23 @@ export function BoardSelectorPage({
             )}
           </section>
 
-          <section className="board-list-section">
-            <div className="board-list-header">
-              <h2>Group Boards</h2>
+
+        <section className="board-list-section">
+          <div className="board-list-header">
+            <h2>Group Boards</h2>
+            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
               <span>{groupBoards.length}</span>
+              <button
+                className="btn btn-secondary"
+                onClick={() => void handleCreateBoard('group')}
+                disabled={isCreating}
+                title="Create a new group board"
+                style={{ padding: '0.4rem 0.6rem', fontSize: '0.875rem' }}
+              >
+                {isCreating && creatingType === 'group' ? '...' : '+'}
+              </button>
             </div>
+          </div>
 
             {groupBoards.length === 0 ? (
               <div className="board-list-empty">No group boards yet.</div>

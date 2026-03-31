@@ -1,8 +1,7 @@
-import { useDroppable } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
-import clsx from 'clsx'
-import type { ReactNode } from 'react'
+/// <reference types="react" />
 import type { Task } from '../types'
+import { ColumnDropZone } from './ColumnDropZone'
 import { TaskCard } from './TaskCard'
 
 type TeamViewProps = {
@@ -11,22 +10,6 @@ type TeamViewProps = {
   workspaceMembers: { id: string; display_name: string | null }[]
   onEditTask: (task: Task) => void
   onDeleteTask: (taskId: string) => void
-}
-
-function TeamColumnDropZone({
-  zoneId,
-  children,
-}: {
-  zoneId: string
-  children: ReactNode
-}) {
-  const { setNodeRef, isOver } = useDroppable({ id: zoneId })
-
-  return (
-    <div ref={setNodeRef} className={clsx('team-column-content', isOver && 'team-column-content-over')}>
-      {children}
-    </div>
-  )
 }
 
 export function TeamView({
@@ -61,7 +44,11 @@ export function TeamView({
           items={unassignedTasks.map((task) => task.id)}
           strategy={verticalListSortingStrategy}
         >
-          <TeamColumnDropZone zoneId="team-unassigned">
+          <ColumnDropZone
+            columnId="team-unassigned"
+            className="team-column-content"
+            overClassName="team-column-content-over"
+          >
             {unassignedTasks.length === 0 ? (
               <p className="empty-state">Drop a task here</p>
             ) : (
@@ -69,7 +56,7 @@ export function TeamView({
                 <TaskCard key={task.id} task={task} onEdit={onEditTask} onDelete={onDeleteTask} />
               ))
             )}
-          </TeamColumnDropZone>
+          </ColumnDropZone>
         </SortableContext>
       </section>
 
@@ -89,7 +76,11 @@ export function TeamView({
               <span className="task-count">{memberTasks.length}</span>
             </header>
             <SortableContext items={memberTasks.map((task) => task.id)} strategy={verticalListSortingStrategy}>
-              <TeamColumnDropZone zoneId={`team-member-${member.id}`}>
+              <ColumnDropZone
+                columnId={`team-member-${member.id}`}
+                className="team-column-content"
+                overClassName="team-column-content-over"
+              >
                 {memberTasks.length === 0 ? (
                   <p className="empty-state">Drop a task here</p>
                 ) : (
@@ -97,7 +88,7 @@ export function TeamView({
                     <TaskCard key={task.id} task={task} onEdit={onEditTask} onDelete={onDeleteTask} />
                   ))
                 )}
-              </TeamColumnDropZone>
+              </ColumnDropZone>
             </SortableContext>
           </section>
         )

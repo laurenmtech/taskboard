@@ -601,6 +601,58 @@ export function useTaskboard() {
     return true
   }
 
+  async function createPersonalBoard(boardName: string) {
+    const activeUserId = userId ?? (await ensureUserSession())
+    if (!activeUserId) {
+      return false
+    }
+
+    const trimmed = boardName.trim()
+    if (!trimmed) {
+      setError('Personal board name is required.')
+      return false
+    }
+
+    setIsLoading(true)
+    setError(null)
+
+    const { data: workspace, error: workspaceError } = await supabase
+      .from('workspaces')
+      .insert({
+        name: trimmed,
+        board_type: 'personal',
+        created_by: activeUserId,
+      })
+      .select('id,name,board_type,created_by,created_at')
+      .single()
+
+    if (workspaceError) {
+      setError(`Could not create board: ${formatDatabaseError(workspaceError.message)}`)
+      setIsLoading(false)
+      return false
+    }
+
+    const { error: membershipError } = await supabase.from('workspace_memberships').upsert(
+      {
+        workspace_id: workspace.id,
+        user_id: activeUserId,
+        role: 'owner',
+      },
+      { onConflict: 'workspace_id,user_id' },
+    )
+
+    if (membershipError) {
+      setError(`Board created, but membership setup failed: ${formatDatabaseError(membershipError.message)}`)
+      setIsLoading(false)
+      return false
+    }
+
+    await fetchWorkspaces(activeUserId)
+    await fetchWorkspaceRoles(activeUserId)
+    setIsLoading(false)
+    return true
+  }
+
   async function inviteMemberToBoard(workspaceId: string, inviteeEmail: string, role: WorkspaceRole) {
     const activeUserId = userId ?? (await ensureUserSession())
     if (!activeUserId) {
@@ -1050,6 +1102,7 @@ export function useTaskboard() {
     openWorkspace,
     refreshCurrentWorkspace,
     createGroupBoard,
+    createPersonalBoard,
     inviteMemberToBoard,
     acceptInvite,
     deleteBoard,

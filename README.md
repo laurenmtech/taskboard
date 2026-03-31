@@ -31,14 +31,6 @@ Taskboard supports personal boards, collaborative group boards, team-oriented ta
 - date-fns
 - clsx
 
-## Project Structure
-
-Key paths:
-
-- src/features/taskboard/hooks/useTaskboard.ts: Central state and data operations
-- src/features/taskboard/components/: UI screens/components
-- src/features/taskboard/styles/: Feature styles
-- supabase/schema.sql: Database schema, constraints, indexes, and RLS policies
 
 ## Requirements
 
@@ -46,25 +38,6 @@ Key paths:
 - npm 9+
 - A Supabase project
 
-## Environment Variables
-
-Create a local env file from .env.example:
-
-```bash
-cp .env.example .env.local
-```
-
-Set:
-
-```env
-VITE_SUPABASE_URL=https://YOUR_PROJECT_ID.supabase.co
-VITE_SUPABASE_ANON_KEY=YOUR_SUPABASE_ANON_KEY
-```
-
-Important:
-
-- Use the publishable anon key only
-- Do not expose the service role key in frontend code
 
 ## Supabase Setup
 
@@ -118,84 +91,3 @@ npm run lint
 4. Switch to Team View
 5. Drag tasks from Unassigned to member columns
 
-Notes on demo members:
-
-- Demo members are local UI-only entities
-- Assigning a task to a demo member is local-only and not persisted to DB
-- Assigning to real members is persisted
-
-## Screenshots and Demo Media
-
-Add project images/GIFs under an assets folder in the repo, for example:
-
-- docs/images/board-selector.png
-- docs/images/board-view.png
-- docs/images/team-view.png
-- docs/images/team-drag-drop.gif
-
-Then replace placeholders below with your real files.
-
-### Board Selector
-
-![Board Selector](docs/images/board-selector.png)
-
-### Board View
-
-![Board View](docs/images/board-view.png)
-
-### Team View
-
-![Team View](docs/images/team-view.png)
-
-### Drag and Drop Assignment Demo
-
-![Team Drag and Drop Demo](docs/images/team-drag-drop.gif)
-
-Optional: if your GIFs are large, compress them with ffmpeg before committing.
-
-```bash
-ffmpeg -i input.mp4 -vf "fps=12,scale=1280:-1:flags=lanczos" -loop 0 docs/images/team-drag-drop.gif
-```
-
-## Data and Access Model
-
-High-level behavior:
-
-- Workspaces are personal or group
-- Memberships control access and roles (owner/admin/member)
-- Invites are email-based and can be accepted from Pending Invites
-- Tasks belong to a workspace and can optionally have assignee_id
-
-RLS in schema.sql protects reads/writes based on ownership and membership checks.
-
-## Deployment
-
-Any static host that supports Vite output works.
-
-For Vercel / Netlify / Cloudflare Pages:
-
-- Build command: npm run build
-- Output directory: dist
-- Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY
-
-## Troubleshooting
-
-Anonymous auth error:
-
-- Enable anonymous provider in Supabase Auth settings
-
-Tasks table/schema cache errors:
-
-- Re-run supabase/schema.sql in Supabase SQL Editor
-
-RLS insert/update blocked:
-
-- Ensure the latest policies from supabase/schema.sql are applied
-
-Team assignment to demo member not persisting:
-
-- Expected behavior; demo members are intentionally local-only
-
-## License
-
-Add your preferred license (MIT, Apache-2.0, etc.) if distributing this project publicly.

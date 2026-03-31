@@ -40,6 +40,7 @@ export default function App() {
         }}
         onBackToLanding={taskboard.goToLanding}
         onCreateGroupBoard={taskboard.createGroupBoard}
+        onCreatePersonalBoard={taskboard.createPersonalBoard}
         onAcceptInvite={taskboard.acceptInvite}
         onDeleteBoard={taskboard.deleteBoard}
       />

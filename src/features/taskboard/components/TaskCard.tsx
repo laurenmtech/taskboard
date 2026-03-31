@@ -1,7 +1,9 @@
+/// <reference types="react" />
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import clsx from 'clsx'
 import { format, formatDistanceToNow, isBefore } from 'date-fns'
+import type { PointerEvent as ReactPointerEvent } from 'react'
 import type { Task } from '../types'
 
 type TaskCardProps = {
@@ -12,7 +14,7 @@ type TaskCardProps = {
 
 export function TaskCard({ task, onEdit, onDelete }: TaskCardProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
-    useSortable({ id: task.id })
+    useSortable({ id: task.id, resizeObserverConfig: {} })
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -45,8 +47,8 @@ export function TaskCard({ task, onEdit, onDelete }: TaskCardProps) {
         <button
           type="button"
           className="task-link-btn"
-          onPointerDown={(event) => event.stopPropagation()}
-          onClick={(event) => {
+          onPointerDown={(event: ReactPointerEvent<HTMLButtonElement>) => event.stopPropagation()}
+          onClick={(event: ReactPointerEvent<HTMLButtonElement>) => {
             event.stopPropagation()
             onEdit(task)
           }}
@@ -57,8 +59,8 @@ export function TaskCard({ task, onEdit, onDelete }: TaskCardProps) {
         <button
           type="button"
           className="task-link-btn task-link-btn-danger"
-          onPointerDown={(event) => event.stopPropagation()}
-          onClick={(event) => {
+          onPointerDown={(event: ReactPointerEvent<HTMLButtonElement>) => event.stopPropagation()}
+          onClick={(event: ReactPointerEvent<HTMLButtonElement>) => {
             event.stopPropagation()
             onDelete(task.id)
           }}
