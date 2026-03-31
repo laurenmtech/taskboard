@@ -219,7 +219,7 @@ export function BoardSelectorPage({
                   setNewBoardName('')
                 }
               }}
-              placeholder={`Enter ${creatingType} board name...`}
+              placeholder="Write your board name here"
               autoFocus
             />
             <button
