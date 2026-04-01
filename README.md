@@ -4,6 +4,8 @@ A modern Kanban app built with React, TypeScript, Vite, and Supabase.
 
 Taskboard supports personal boards, collaborative group boards, team-oriented task views, and drag-and-drop workflows for both status and assignee management.
 
+Check out the demo here: https://taskboard-blue.vercel.app
+
 ## Features
 
 - Personal and group boards
