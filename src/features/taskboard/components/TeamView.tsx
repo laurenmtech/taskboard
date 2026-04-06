@@ -1,5 +1,6 @@
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 /// <reference types="react" />
+import { isValid, parse } from 'date-fns'
 import type { Task } from '../types'
 import { ColumnDropZone } from './ColumnDropZone'
 import { TaskCard } from './TaskCard'
@@ -9,6 +10,14 @@ const DAY_MS = 24 * 60 * 60 * 1000
 function parseDateMs(value: string | null) {
   if (!value) {
     return null
+  }
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    const parsedLocalDate = parse(value, 'yyyy-MM-dd', new Date())
+    if (!isValid(parsedLocalDate)) {
+      return null
+    }
+    return parsedLocalDate.getTime()
   }
 
   const parsed = new Date(value).getTime()

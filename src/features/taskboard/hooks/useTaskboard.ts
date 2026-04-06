@@ -1,5 +1,5 @@
 import { arrayMove } from '@dnd-kit/sortable'
-import { isBefore, startOfDay } from 'date-fns'
+import { isBefore, isValid, parse, startOfDay } from 'date-fns'
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../../../utils/supabase'
 import { COLUMNS, initialFormState } from '../constants'
@@ -54,6 +54,15 @@ function isDemoMemberId(memberId: string | null | undefined) {
 type BootstrapOptions = {
   forceNewGuest?: boolean
   enterWorkspace?: boolean
+}
+
+function parseDueDate(value: string | null) {
+  if (!value) {
+    return null
+  }
+
+  const parsed = parse(value, 'yyyy-MM-dd', new Date())
+  return isValid(parsed) ? parsed : null
 }
 
 export function useTaskboard() {
@@ -112,8 +121,10 @@ export function useTaskboard() {
     const done = tasks.filter((task) => task.status === 'done').length
     const today = startOfDay(new Date())
     const overdue = tasks.filter(
-      (task) =>
-        !!task.due_date && isBefore(startOfDay(new Date(task.due_date)), today) && task.status !== 'done',
+      (task) => {
+        const dueDate = parseDueDate(task.due_date)
+        return !!dueDate && isBefore(startOfDay(dueDate), today) && task.status !== 'done'
+      },
     ).length
     return { total, done, overdue }
   }, [tasks])
