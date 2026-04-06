@@ -71,6 +71,8 @@ export function WorkspaceView({
   onEditTask,
   onDeleteTask,
 }: WorkspaceViewProps) {
+  const isGroupBoard = activeWorkspace?.board_type === 'group'
+
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
     useSensor(KeyboardSensor, {
@@ -152,14 +154,16 @@ export function WorkspaceView({
           >
             📊 Board
           </button>
-          <button
-            className={clsx('view-btn', { active: viewMode === 'team' })}
-            onClick={() => onViewModeChange('team')}
-            aria-label="Switch to team view"
-            title="Team View"
-          >
-            👥 Team
-          </button>
+          {isGroupBoard && (
+            <button
+              className={clsx('view-btn', { active: viewMode === 'team' })}
+              onClick={() => onViewModeChange('team')}
+              aria-label="Switch to team view"
+              title="Team View"
+            >
+              👥 Team
+            </button>
+          )}
         </div>
       </section>
 
@@ -192,7 +196,7 @@ export function WorkspaceView({
           <div className="spinner" />
           <p>Loading your board...</p>
         </section>
-      ) : viewMode === 'team' ? (
+      ) : viewMode === 'team' && isGroupBoard ? (
         <DndContext
           sensors={sensors}
           collisionDetection={closestCorners}

@@ -157,6 +157,12 @@ export function useTaskboard() {
     }
   }, [activeWorkspaceId, activeWorkspace?.board_type])
 
+  useEffect(() => {
+    if (activeWorkspace?.board_type === 'personal' && viewMode === 'team') {
+      setViewMode('board')
+    }
+  }, [activeWorkspace?.board_type, viewMode])
+
   async function checkExistingSession() {
     setIsCheckingSession(true)
 
@@ -781,6 +787,15 @@ export function useTaskboard() {
     setIsCreatingTask(false)
   }
 
+  function changeViewMode(mode: 'board' | 'team') {
+    if (mode === 'team' && activeWorkspace?.board_type !== 'group') {
+      setViewMode('board')
+      return
+    }
+
+    setViewMode(mode)
+  }
+
   function goToLanding() {
     setCurrentView('landing')
     setIsCreatingTask(false)
@@ -1092,7 +1107,7 @@ export function useTaskboard() {
     formState,
     setSearch,
     setPriorityFilter,
-    setViewMode,
+    setViewMode: changeViewMode,
     setIsCreatingTask,
     updateFormState,
     openCreateTaskModal,
