@@ -1,5 +1,5 @@
 import { arrayMove } from '@dnd-kit/sortable'
-import { isBefore } from 'date-fns'
+import { isBefore, startOfDay } from 'date-fns'
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../../../utils/supabase'
 import { COLUMNS, initialFormState } from '../constants'
@@ -110,9 +110,10 @@ export function useTaskboard() {
   const summary = useMemo(() => {
     const total = tasks.length
     const done = tasks.filter((task) => task.status === 'done').length
+    const today = startOfDay(new Date())
     const overdue = tasks.filter(
       (task) =>
-        !!task.due_date && isBefore(new Date(task.due_date), new Date()) && task.status !== 'done',
+        !!task.due_date && isBefore(startOfDay(new Date(task.due_date)), today) && task.status !== 'done',
     ).length
     return { total, done, overdue }
   }, [tasks])

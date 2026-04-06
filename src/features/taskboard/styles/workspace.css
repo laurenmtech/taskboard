@@ -699,3 +699,113 @@
   font-size: 0.95rem;
   font-style: italic;
 }
+
+.team-timeline {
+  grid-column: 1 / -1;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(244, 255, 251, 0.9));
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 1rem;
+  box-shadow: 0 8px 22px rgba(85, 74, 111, 0.08);
+}
+
+.team-timeline-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.8rem;
+  align-items: end;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid rgba(255, 111, 97, 0.14);
+}
+
+.team-timeline-header h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+}
+
+.team-timeline-header p {
+  margin: 0.2rem 0 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.team-timeline-range {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  color: #4e5f73;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.team-timeline-range span:last-child {
+  background: rgba(95, 178, 228, 0.14);
+  border: 1px solid rgba(95, 178, 228, 0.26);
+  border-radius: 999px;
+  padding: 0.14rem 0.5rem;
+}
+
+.team-timeline-grid {
+  margin-top: 0.8rem;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.timeline-row {
+  display: grid;
+  grid-template-columns: minmax(130px, 240px) 1fr;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.timeline-row-title {
+  margin: 0;
+  color: #405267;
+  font-size: 0.84rem;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.timeline-track {
+  height: 18px;
+  border-radius: 999px;
+  border: 1px solid rgba(183, 222, 239, 0.6);
+  background:
+    repeating-linear-gradient(
+      to right,
+      rgba(95, 178, 228, 0.08) 0,
+      rgba(95, 178, 228, 0.08) 1px,
+      transparent 1px,
+      transparent 12%
+    ),
+    #f8fbff;
+  position: relative;
+}
+
+.timeline-bar {
+  position: absolute;
+  top: 2px;
+  height: calc(100% - 4px);
+  min-width: 8px;
+  border-radius: 999px;
+  box-shadow: 0 3px 10px rgba(49, 72, 95, 0.18);
+}
+
+.timeline-bar-todo {
+  background: linear-gradient(90deg, #8d99ae, #667085);
+}
+
+.timeline-bar-in_progress {
+  background: linear-gradient(90deg, #53b9ff, #2f80c9);
+}
+
+.timeline-bar-in_review {
+  background: linear-gradient(90deg, #f8b54f, #dd8d28);
+}
+
+.timeline-bar-done {
+  background: linear-gradient(90deg, #62d39b, #38a86f);
+}

@@ -2,7 +2,7 @@
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import clsx from 'clsx'
-import { format, formatDistanceToNow, isBefore } from 'date-fns'
+import { endOfDay, format, formatDistanceToNow, isBefore, isToday, startOfDay } from 'date-fns'
 import type { PointerEvent as ReactPointerEvent } from 'react'
 import type { Task } from '../types'
 
@@ -22,11 +22,15 @@ export function TaskCard({ task, onEdit, onDelete }: TaskCardProps) {
   }
 
   const dueDate = task.due_date ? new Date(task.due_date) : null
-  const isOverdue = dueDate ? isBefore(dueDate, new Date()) && task.status !== 'done' : false
+  const isOverdue = dueDate
+    ? isBefore(startOfDay(dueDate), startOfDay(new Date())) && task.status !== 'done'
+    : false
   const dueBadge = dueDate
     ? isOverdue
       ? 'Overdue'
-      : `Due ${formatDistanceToNow(dueDate, { addSuffix: true })}`
+      : isToday(dueDate)
+        ? 'Due today'
+        : `Due ${formatDistanceToNow(endOfDay(dueDate), { addSuffix: true })}`
     : null
 
   return (
