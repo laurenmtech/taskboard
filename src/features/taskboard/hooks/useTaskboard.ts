@@ -548,7 +548,11 @@ export function useTaskboard() {
   }
 
   async function fetchPendingInvites() {
-    const email = userEmail?.toLowerCase() ?? ''
+    // Read the email from the session rather than userEmail state. bootstrapSession
+    // calls this right after signing in, before that state update is visible in
+    // this closure, which previously made invites look empty until a later refresh.
+    const { data: sessionData } = await supabase.auth.getSession()
+    const email = sessionData.session?.user.email?.toLowerCase() ?? ''
     if (!email) {
       setPendingInvites([])
       return

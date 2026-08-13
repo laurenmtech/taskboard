@@ -70,6 +70,11 @@ export default function App() {
         filteredTaskCount={taskboard.filteredTasks.length}
         activeTask={taskboard.activeTask}
         workspaceMembers={taskboard.workspaceMembers}
+        canManageBoard={
+          !!taskboard.activeWorkspace &&
+          taskboard.manageableWorkspaceIds.includes(taskboard.activeWorkspace.id)
+        }
+        onInviteMember={taskboard.inviteMemberToBoard}
         onSimulateNewGuest={() => void taskboard.simulateNewGuestSignIn()}
         onBackToBoards={taskboard.goToBoardPicker}
         onSimulateTeamMembers={taskboard.simulateTeamMembers}

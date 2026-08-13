@@ -12,8 +12,10 @@ import {
 import { SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import clsx from 'clsx'
 import { COLUMNS } from '../constants'
-import type { Task, TaskPriority, Workspace } from '../types'
+import type { Task, TaskPriority, Workspace, WorkspaceRole } from '../types'
+import { useState } from 'react'
 import { ColumnDropZone } from './ColumnDropZone'
+import { InviteMemberForm } from './InviteMemberForm'
 import { TaskCard, TaskCardOverlay } from './TaskCard'
 import { TeamView } from './TeamView'
 
@@ -31,6 +33,12 @@ type WorkspaceViewProps = {
   filteredTaskCount: number
   activeTask: Task | null
   workspaceMembers: { id: string; display_name: string | null }[]
+  canManageBoard: boolean
+  onInviteMember: (
+    workspaceId: string,
+    inviteeEmail: string,
+    role: WorkspaceRole,
+  ) => Promise<boolean>
   onSimulateNewGuest: () => void
   onBackToBoards: () => void
   onSimulateTeamMembers: () => void
@@ -59,6 +67,8 @@ export function WorkspaceView({
   filteredTaskCount,
   activeTask,
   workspaceMembers,
+  canManageBoard,
+  onInviteMember,
   onBackToBoards,
   onSimulateTeamMembers,
   onOpenCreateTask,
@@ -72,6 +82,8 @@ export function WorkspaceView({
   onDeleteTask,
 }: WorkspaceViewProps) {
   const isGroupBoard = activeWorkspace?.board_type === 'group'
+  const canInvite = isGroupBoard && canManageBoard && !!activeWorkspace
+  const [isInviting, setIsInviting] = useState(false)
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -93,6 +105,15 @@ export function WorkspaceView({
           <button className="btn btn-secondary" onClick={onBackToBoards} aria-label="Go back to board selection">
             My Boards
           </button>
+          {canInvite && (
+            <button
+              className="btn btn-secondary"
+              onClick={() => setIsInviting((current) => !current)}
+              aria-label="Invite a member to this board"
+            >
+              Invite Member
+            </button>
+          )}
           {activeWorkspace?.board_type === 'group' && (
             <button
               className="btn btn-secondary"
@@ -107,6 +128,14 @@ export function WorkspaceView({
           </button>
         </div>
       </header>
+
+      {canInvite && isInviting && activeWorkspace && (
+        <InviteMemberForm
+          workspaceId={activeWorkspace.id}
+          onInviteMember={onInviteMember}
+          onClose={() => setIsInviting(false)}
+        />
+      )}
 
       <section className="summary-grid">
         <article>
