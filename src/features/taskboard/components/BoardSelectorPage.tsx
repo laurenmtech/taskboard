@@ -22,6 +22,80 @@ type BoardSelectorPageProps = {
   onCreatePersonalBoard: (boardName: string) => Promise<boolean>
   onAcceptInvite: (inviteId: string) => Promise<boolean>
   onDeleteBoard: (workspaceId: string) => Promise<boolean>
+  onRenameBoard: (workspaceId: string, name: string) => Promise<boolean>
+}
+
+function BoardCardTitle({
+  board,
+  isEditing,
+  onStartEditing,
+  onCancelEditing,
+  onRenameBoard,
+}: {
+  board: Workspace
+  isEditing: boolean
+  onStartEditing: () => void
+  onCancelEditing: () => void
+  onRenameBoard: (workspaceId: string, name: string) => Promise<boolean>
+}) {
+  const [draftName, setDraftName] = useState(board.name)
+  const [isSaving, setIsSaving] = useState(false)
+
+  async function handleSave() {
+    setIsSaving(true)
+    const ok = await onRenameBoard(board.id, draftName)
+    setIsSaving(false)
+    if (ok) {
+      onCancelEditing()
+    }
+  }
+
+  if (!isEditing) {
+    return (
+      <h3 className="board-card-title">
+        {board.name}
+        <button
+          className="board-card-rename"
+          onClick={(event) => {
+            event.stopPropagation()
+            setDraftName(board.name)
+            onStartEditing()
+          }}
+          aria-label={`Rename ${board.name}`}
+          title="Rename board"
+        >
+          ✏️
+        </button>
+      </h3>
+    )
+  }
+
+  return (
+    <div className="board-card-rename-row" onClick={(event) => event.stopPropagation()}>
+      <input
+        value={draftName}
+        onChange={(event) => setDraftName(event.target.value)}
+        onKeyDown={(event) => {
+          // The card is itself a button; stop Enter and Space from reopening the board.
+          event.stopPropagation()
+          if (event.key === 'Enter') {
+            void handleSave()
+          } else if (event.key === 'Escape') {
+            onCancelEditing()
+          }
+        }}
+        aria-label="Board name"
+        disabled={isSaving}
+        autoFocus
+      />
+      <button className="btn btn-primary btn-compact" onClick={() => void handleSave()} disabled={isSaving}>
+        {isSaving ? '...' : 'Save'}
+      </button>
+      <button className="btn btn-ghost btn-compact" onClick={onCancelEditing} disabled={isSaving}>
+        Cancel
+      </button>
+    </div>
+  )
 }
 
 function handleCardKeyDown(event: KeyboardEvent<HTMLElement>, onOpen: () => void) {
@@ -39,12 +113,15 @@ function PersonalBoardCard({
   board,
   onOpenBoard,
   onDeleteBoard,
+  onRenameBoard,
 }: {
   board: Workspace
   onOpenBoard: (workspaceId: string) => void
   onDeleteBoard: (workspaceId: string) => Promise<boolean>
+  onRenameBoard: (workspaceId: string, name: string) => Promise<boolean>
 }) {
   const [isDeleting, setIsDeleting] = useState(false)
+  const [isEditing, setIsEditing] = useState(false)
 
   async function handleDelete() {
     setIsDeleting(true)
@@ -57,12 +134,18 @@ function PersonalBoardCard({
       className="board-card board-card-panel"
       role="button"
       tabIndex={0}
-      onClick={() => onOpenBoard(board.id)}
-      onKeyDown={(event) => handleCardKeyDown(event, () => onOpenBoard(board.id))}
+      onClick={() => !isEditing && onOpenBoard(board.id)}
+      onKeyDown={(event) => !isEditing && handleCardKeyDown(event, () => onOpenBoard(board.id))}
       aria-label={`Open personal board ${board.name}`}
     >
       <p className="board-card-type">Personal</p>
-      <h3>{board.name}</h3>
+      <BoardCardTitle
+        board={board}
+        isEditing={isEditing}
+        onStartEditing={() => setIsEditing(true)}
+        onCancelEditing={() => setIsEditing(false)}
+        onRenameBoard={onRenameBoard}
+      />
       <p>Your private board</p>
       <div className="board-card-actions" onClick={(event) => event.stopPropagation()}>
         <button
@@ -85,14 +168,17 @@ function GroupBoardCard({
   role,
   onOpenBoard,
   onDeleteBoard,
+  onRenameBoard,
 }: {
   board: Workspace
   canManage: boolean
   role: WorkspaceRole | undefined
   onOpenBoard: (workspaceId: string) => void
   onDeleteBoard: (workspaceId: string) => Promise<boolean>
+  onRenameBoard: (workspaceId: string, name: string) => Promise<boolean>
 }) {
   const [isDeleting, setIsDeleting] = useState(false)
+  const [isEditing, setIsEditing] = useState(false)
 
   async function handleDelete() {
     setIsDeleting(true)
@@ -105,12 +191,22 @@ function GroupBoardCard({
       className="board-card board-card-panel"
       role="button"
       tabIndex={0}
-      onClick={() => onOpenBoard(board.id)}
-      onKeyDown={(event) => handleCardKeyDown(event, () => onOpenBoard(board.id))}
+      onClick={() => !isEditing && onOpenBoard(board.id)}
+      onKeyDown={(event) => !isEditing && handleCardKeyDown(event, () => onOpenBoard(board.id))}
       aria-label={`Open group board ${board.name}`}
     >
       <p className="board-card-type">Group</p>
-      <h3>{board.name}</h3>
+      {canManage ? (
+        <BoardCardTitle
+          board={board}
+          isEditing={isEditing}
+          onStartEditing={() => setIsEditing(true)}
+          onCancelEditing={() => setIsEditing(false)}
+          onRenameBoard={onRenameBoard}
+        />
+      ) : (
+        <h3 className="board-card-title">{board.name}</h3>
+      )}
       <p>Your role: {role ?? 'member'}</p>
 
       <div className="board-card-actions" onClick={(event) => event.stopPropagation()}>
@@ -150,6 +246,7 @@ export function BoardSelectorPage({
   onCreatePersonalBoard,
   onAcceptInvite,
   onDeleteBoard,
+  onRenameBoard,
 }: BoardSelectorPageProps) {
   const [newBoardName, setNewBoardName] = useState('')
   const [isCreating, setIsCreating] = useState(false)
@@ -300,6 +397,7 @@ export function BoardSelectorPage({
                     board={board}
                     onOpenBoard={onOpenBoard}
                     onDeleteBoard={onDeleteBoard}
+                    onRenameBoard={onRenameBoard}
                   />
                 ))}
               </div>
@@ -336,6 +434,7 @@ export function BoardSelectorPage({
                     role={workspaceRoles[board.id]}
                     onOpenBoard={onOpenBoard}
                     onDeleteBoard={onDeleteBoard}
+                    onRenameBoard={onRenameBoard}
                   />
                 ))}
               </div>

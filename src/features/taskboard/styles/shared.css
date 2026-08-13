@@ -126,6 +126,51 @@ select:focus-visible,
   gap: 0.5rem;
 }
 
+.board-card-title {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.board-card-rename {
+  border: none;
+  background: none;
+  padding: 0.1rem 0.2rem;
+  font-size: 0.8rem;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: 6px;
+  opacity: 0;
+  transition: opacity 150ms ease;
+}
+
+.board-card:hover .board-card-rename,
+.board-card-rename:focus-visible {
+  opacity: 0.75;
+}
+
+.board-card-rename:hover {
+  opacity: 1;
+  background: var(--brand-soft);
+}
+
+.board-card-rename-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.board-card-rename-row input {
+  flex: 1;
+  min-width: 8rem;
+  padding: 0.4rem 0.55rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font: inherit;
+  font-size: 0.95rem;
+}
+
 .eyebrow {
   margin: 0;
   color: #ca5f3e;

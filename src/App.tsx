@@ -49,6 +49,7 @@ export default function App() {
         onCreatePersonalBoard={taskboard.createPersonalBoard}
         onAcceptInvite={taskboard.acceptInvite}
         onDeleteBoard={taskboard.deleteBoard}
+        onRenameBoard={taskboard.renameBoard}
       />
     )
   }

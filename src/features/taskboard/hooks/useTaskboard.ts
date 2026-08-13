@@ -870,6 +870,59 @@ export function useTaskboard() {
     return true
   }
 
+  async function renameBoard(workspaceId: string, nextName: string) {
+    const activeUserId = userId ?? (await ensureUserSession())
+    if (!activeUserId) {
+      return false
+    }
+
+    const workspace = workspaces.find((w) => w.id === workspaceId)
+    if (!workspace) {
+      setError('Board not found.')
+      return false
+    }
+
+    const trimmed = nextName.trim()
+    if (!trimmed) {
+      setError('Board name is required.')
+      return false
+    }
+
+    if (trimmed === workspace.name) {
+      return true
+    }
+
+    // Mirrors the workspaces update policy, which allows creators plus owners and admins.
+    if (workspace.created_by !== activeUserId && !manageableWorkspaceIds.includes(workspaceId)) {
+      setError('Only board owners or admins can rename boards.')
+      return false
+    }
+
+    setError(null)
+    setNotice(null)
+
+    // Optimistic: the name is already on screen in the input the user just typed into.
+    setWorkspaces((current) =>
+      current.map((w) => (w.id === workspaceId ? { ...w, name: trimmed } : w)),
+    )
+
+    const { error: renameError } = await supabase
+      .from('workspaces')
+      .update({ name: trimmed })
+      .eq('id', workspaceId)
+
+    if (renameError) {
+      setWorkspaces((current) =>
+        current.map((w) => (w.id === workspaceId ? { ...w, name: workspace.name } : w)),
+      )
+      setError(`Could not rename board: ${formatDatabaseError(renameError.message)}`)
+      return false
+    }
+
+    setNotice(`Renamed to "${trimmed}".`)
+    return true
+  }
+
   async function deleteBoard(workspaceId: string) {
     const activeUserId = userId ?? (await ensureUserSession())
     if (!activeUserId) {
@@ -1251,6 +1304,7 @@ export function useTaskboard() {
     refreshCurrentWorkspace,
     createGroupBoard,
     createPersonalBoard,
+    renameBoard,
     inviteMemberToBoard,
     acceptInvite,
     deleteBoard,
