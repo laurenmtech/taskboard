@@ -47,8 +47,8 @@ export function LandingPage({
   return (
     <div className="landing-shell">
       <section className="landing-card">
-        <p className="eyebrow">Kanban Spaces</p>
-        <h1>Welcome to your task workspace</h1>
+        <p className="eyebrow">Momentum</p>
+        <h1>Keep your work moving</h1>
         <p>
           Sign in to keep your boards across devices, or try it instantly as a guest.
         </p>
