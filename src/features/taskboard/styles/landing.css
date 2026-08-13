@@ -35,6 +35,28 @@
   flex-wrap: wrap;
 }
 
+.landing-actions .btn-google {
+  flex: 1;
+  min-width: 15rem;
+  padding: 0.7rem 1rem;
+}
+
+.landing-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.landing-divider::before,
+.landing-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+}
+
 .landing-hint {
   font-size: 0.9rem;
   color: #62637a;

@@ -428,6 +428,23 @@ using (
   )
 );
 
+-- Resolve a display name from OAuth metadata, falling back to the email local part.
+-- Google returns 'full_name' and 'name'; anonymous users have neither.
+create or replace function public.resolve_display_name(
+  metadata jsonb,
+  email text
+)
+returns text
+language sql
+immutable
+as $$
+  select nullif(trim(coalesce(
+    nullif(trim(metadata->>'full_name'), ''),
+    nullif(trim(metadata->>'name'), ''),
+    nullif(split_part(coalesce(email, ''), '@', 1), '')
+  )), '');
+$$;
+
 -- Automatically create a profile and personal workspace for every new auth user.
 create or replace function public.handle_new_user()
 returns trigger
@@ -438,8 +455,12 @@ as $$
 declare
   new_workspace_id uuid;
 begin
-  insert into public.profiles (id, user_type)
-  values (new.id, 'individual')
+  insert into public.profiles (id, display_name, user_type)
+  values (
+    new.id,
+    public.resolve_display_name(new.raw_user_meta_data, new.email),
+    'individual'
+  )
   on conflict (id) do nothing;
 
   insert into public.workspaces (name, board_type, created_by)
@@ -458,3 +479,59 @@ drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
 after insert on auth.users
 for each row execute procedure public.handle_new_user();
+
+-- When a guest links a Google identity, auth.users gains an email and metadata.
+-- Backfill the profile name so upgraded accounts stop showing as blank.
+-- An explicitly chosen display_name is never overwritten.
+create or replace function public.handle_user_identity_update()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  update public.profiles p
+  set display_name = coalesce(
+    nullif(trim(p.display_name), ''),
+    public.resolve_display_name(new.raw_user_meta_data, new.email)
+  )
+  where p.id = new.id;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists on_auth_user_updated on auth.users;
+create trigger on_auth_user_updated
+after update on auth.users
+for each row
+when (
+  old.raw_user_meta_data is distinct from new.raw_user_meta_data
+  or old.email is distinct from new.email
+)
+execute procedure public.handle_user_identity_update();
+
+-- Team View needs teammate names. Without this, the profiles select policy above
+-- limits reads to the caller's own row and every teammate renders blank.
+-- SECURITY DEFINER avoids recursive RLS evaluation against workspace_memberships.
+create or replace function public.shares_workspace_with(target_user_id uuid)
+returns boolean
+language sql
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1
+    from public.workspace_memberships me
+    join public.workspace_memberships them
+      on them.workspace_id = me.workspace_id
+    where me.user_id = auth.uid()
+      and them.user_id = target_user_id
+  );
+$$;
+
+drop policy if exists "Users can read co-member profiles" on public.profiles;
+create policy "Users can read co-member profiles"
+on public.profiles
+for select
+using (public.shares_workspace_with(profiles.id));

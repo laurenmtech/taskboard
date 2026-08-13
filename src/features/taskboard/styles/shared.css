@@ -45,6 +45,87 @@ select:focus-visible,
   filter: saturate(1.08) brightness(1.02);
 }
 
+.btn-google {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  color: #3c4043;
+  background: #fff;
+  border-color: #dadce0;
+  box-shadow: 0 6px 16px rgba(60, 64, 67, 0.12);
+}
+
+.btn-google:disabled,
+.btn-secondary:disabled,
+.btn-ghost:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  transform: none;
+}
+
+.btn-ghost {
+  color: var(--muted);
+  background: transparent;
+  border-color: var(--line);
+}
+
+.btn-compact {
+  padding: 0.42rem 0.75rem;
+  font-size: 0.85rem;
+}
+
+.google-mark {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.account-bar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--card);
+  box-shadow: 0 6px 18px rgba(83, 70, 110, 0.08);
+}
+
+.account-identity {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.account-avatar {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(140deg, var(--brand), var(--brand-strong));
+}
+
+.account-meta {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+}
+
+.account-meta small {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.account-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .eyebrow {
   margin: 0;
   color: #ca5f3e;

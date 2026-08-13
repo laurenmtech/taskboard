@@ -14,7 +14,9 @@ export default function App() {
         error={taskboard.error}
         isLoading={taskboard.isLoading}
         isCheckingSession={taskboard.isCheckingSession}
+        isAuthenticating={taskboard.isAuthenticating}
         existingSessionUserId={taskboard.existingSessionUserId}
+        onSignInWithGoogle={() => void taskboard.signInWithGoogle()}
         onStartNewGuestWorkspace={() =>
           void taskboard.bootstrapSession({ forceNewGuest: true, enterWorkspace: true })
         }
@@ -30,6 +32,11 @@ export default function App() {
         error={taskboard.error}
         notice={taskboard.notice}
         userEmail={taskboard.userEmail}
+        displayName={taskboard.displayName}
+        isAnonymous={taskboard.isAnonymous}
+        isAuthenticating={taskboard.isAuthenticating}
+        onUpgradeWithGoogle={() => void taskboard.upgradeGuestWithGoogle()}
+        onSignOut={() => void taskboard.signOut()}
         personalBoards={taskboard.personalWorkspaces}
         groupBoards={taskboard.groupWorkspaces}
         pendingInvites={taskboard.pendingInvites}
@@ -38,7 +45,6 @@ export default function App() {
         onOpenBoard={(workspaceId) => {
           void taskboard.openWorkspace(workspaceId)
         }}
-        onBackToLanding={taskboard.goToLanding}
         onCreateGroupBoard={taskboard.createGroupBoard}
         onCreatePersonalBoard={taskboard.createPersonalBoard}
         onAcceptInvite={taskboard.acceptInvite}

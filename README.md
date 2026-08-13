@@ -43,15 +43,33 @@ Check out the demo here: https://taskboard-blue.vercel.app
 
 ## Supabase Setup
 
-1. Enable anonymous auth in Supabase:
+1. Enable anonymous auth:
 	Authentication -> Providers -> Anonymous -> Enable
-2. Open SQL Editor and run all SQL in supabase/schema.sql
-3. Confirm tables exist:
+2. Enable Google sign-in:
+	- In Google Cloud Console, create an OAuth 2.0 Client ID (Web application)
+	- Authorized redirect URI: `https://<project-ref>.supabase.co/auth/v1/callback`
+	- Paste the Client ID and Secret into Authentication -> Providers -> Google
+3. Enable manual linking, so guests can upgrade to a Google account
+	without losing their boards:
+	Authentication -> Providers -> Allow manual linking
+4. Set redirect URLs under Authentication -> URL Configuration:
+	- Site URL: your production URL
+	- Additional redirect URLs: `http://localhost:5173/**`
+5. Open SQL Editor and run all SQL in supabase/schema.sql
+6. Confirm tables exist:
 	- profiles
 	- workspaces
 	- workspace_memberships
 	- workspace_invites
 	- tasks
+
+## Auth Model
+
+- Guests get an anonymous Supabase user and a personal board immediately.
+- Signing in with Google links a Google identity onto that same anonymous user,
+  so the user id is preserved and all existing boards and tasks carry over.
+- Workspace invites are matched on the JWT email claim, so they only resolve
+  for Google-authenticated users, not guests.
 
 ## Run Locally
 

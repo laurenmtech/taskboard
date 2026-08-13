@@ -1,18 +1,23 @@
 import { useState, type KeyboardEvent } from 'react'
 import type { Workspace, WorkspaceInvite, WorkspaceRole } from '../types'
+import { AccountBar } from './AccountBar'
 
 type BoardSelectorPageProps = {
   isLoading: boolean
   error: string | null
   notice: string | null
   userEmail: string | null
+  displayName: string | null
+  isAnonymous: boolean
+  isAuthenticating: boolean
+  onUpgradeWithGoogle: () => void
+  onSignOut: () => void
   personalBoards: Workspace[]
   groupBoards: Workspace[]
   pendingInvites: WorkspaceInvite[]
   manageableWorkspaceIds: string[]
   workspaceRoles: Record<string, WorkspaceRole>
   onOpenBoard: (workspaceId: string) => void
-  onBackToLanding: () => void
   onCreateGroupBoard: (boardName: string) => Promise<boolean>
   onCreatePersonalBoard: (boardName: string) => Promise<boolean>
   onAcceptInvite: (inviteId: string) => Promise<boolean>
@@ -130,13 +135,17 @@ export function BoardSelectorPage({
   error,
   notice,
   userEmail,
+  displayName,
+  isAnonymous,
+  isAuthenticating,
+  onUpgradeWithGoogle,
+  onSignOut,
   personalBoards,
   groupBoards,
   pendingInvites,
   manageableWorkspaceIds,
   workspaceRoles,
   onOpenBoard,
-  onBackToLanding,
   onCreateGroupBoard,
   onCreatePersonalBoard,
   onAcceptInvite,
@@ -172,9 +181,14 @@ export function BoardSelectorPage({
           <h1>Select a Board</h1>
           <p>Choose a personal or group board to continue into your workspace.</p>
         </div>
-        <button className="btn btn-secondary" onClick={onBackToLanding}>
-          Logout
-        </button>
+        <AccountBar
+          displayName={displayName}
+          userEmail={userEmail}
+          isAnonymous={isAnonymous}
+          isAuthenticating={isAuthenticating}
+          onUpgradeWithGoogle={onUpgradeWithGoogle}
+          onSignOut={onSignOut}
+        />
       </header>
 
       {error && <p className="error-banner">{error}</p>}
@@ -187,7 +201,10 @@ export function BoardSelectorPage({
         </div>
 
         {!userEmail ? (
-          <div className="board-list-empty">Pending invites require an account with an email address.</div>
+          <div className="board-list-empty">
+            Invites are matched by email address. Save this guest workspace with Google to receive
+            them.
+          </div>
         ) : pendingInvites.length === 0 ? (
           <div className="board-list-empty">No pending invites for {userEmail}.</div>
         ) : (

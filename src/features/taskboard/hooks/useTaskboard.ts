@@ -1,4 +1,5 @@
 import { arrayMove } from '@dnd-kit/sortable'
+import type { User } from '@supabase/supabase-js'
 import { isBefore, isValid, parse, startOfDay } from 'date-fns'
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../../../utils/supabase'
@@ -15,8 +16,18 @@ import type {
 } from '../types'
 
 function formatAuthError(message: string) {
-  if (message.toLowerCase().includes('anonymous sign-ins are disabled')) {
+  const normalized = message.toLowerCase()
+  if (normalized.includes('anonymous sign-ins are disabled')) {
     return 'Anonymous auth is disabled in Supabase. Enable it in Authentication > Providers > Anonymous, then refresh this page.'
+  }
+  if (normalized.includes('provider is not enabled')) {
+    return 'Google sign-in is not enabled in Supabase. Enable it in Authentication > Providers > Google, then refresh this page.'
+  }
+  if (normalized.includes('manual linking is disabled')) {
+    return 'Account linking is disabled in Supabase. Enable it in Authentication > Providers > Allow manual linking, then try again.'
+  }
+  if (normalized.includes('identity is already linked')) {
+    return 'That Google account is already linked to a different workspace. Sign out first, then sign in with Google directly.'
   }
   return message
 }
@@ -47,6 +58,9 @@ function formatDatabaseError(message: string) {
   return message
 }
 
+// Survives the round trip to Google without persisting past the tab session.
+const OAUTH_PENDING_KEY = 'taskboard:oauth-pending'
+
 function isDemoMemberId(memberId: string | null | undefined) {
   return !!memberId && memberId.startsWith('demo-')
 }
@@ -76,6 +90,9 @@ export function useTaskboard() {
   const [activeWorkspaceId, setActiveWorkspaceId] = useState<string | null>(null)
   const [userId, setUserId] = useState<string | null>(null)
   const [userEmail, setUserEmail] = useState<string | null>(null)
+  const [displayName, setDisplayName] = useState<string | null>(null)
+  const [isAnonymous, setIsAnonymous] = useState(true)
+  const [isAuthenticating, setIsAuthenticating] = useState(false)
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [isCheckingSession, setIsCheckingSession] = useState(true)
@@ -159,6 +176,19 @@ export function useTaskboard() {
 
   useEffect(() => {
     void checkExistingSession()
+
+    // Keeps the header in sync when a token refreshes or a Google identity is linked.
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_OUT') {
+        applySessionUser(null)
+        return
+      }
+      if (session?.user) {
+        applySessionUser(session.user)
+      }
+    })
+
+    return () => authListener.subscription.unsubscribe()
   }, [])
 
   useEffect(() => {
@@ -175,6 +205,21 @@ export function useTaskboard() {
     }
   }, [activeWorkspace?.board_type, viewMode])
 
+  function applySessionUser(user: User | null) {
+    setExistingSessionUserId(user?.id ?? null)
+    setUserId(user?.id ?? null)
+    setUserEmail(user?.email ?? null)
+    setIsAnonymous(user ? user.is_anonymous === true : true)
+    setDisplayName(
+      user
+        ? (user.user_metadata?.full_name as string | undefined) ??
+            (user.user_metadata?.name as string | undefined) ??
+            user.email?.split('@')[0] ??
+            null
+        : null,
+    )
+  }
+
   async function checkExistingSession() {
     setIsCheckingSession(true)
 
@@ -185,10 +230,80 @@ export function useTaskboard() {
       return
     }
 
-    const sessionUserId = sessionData.session?.user.id ?? null
-    setExistingSessionUserId(sessionUserId)
-    setUserId(sessionUserId)
+    applySessionUser(sessionData.session?.user ?? null)
     setIsCheckingSession(false)
+
+    // Returning from a Google redirect: drop the user straight back into their boards.
+    const pendingOAuth = sessionStorage.getItem(OAUTH_PENDING_KEY)
+    if (pendingOAuth && sessionData.session) {
+      sessionStorage.removeItem(OAUTH_PENDING_KEY)
+      setNotice(
+        pendingOAuth === 'link'
+          ? 'Account saved. Your boards are now tied to your Google account.'
+          : 'Signed in with Google.',
+      )
+      await bootstrapSession({ enterWorkspace: true })
+    } else if (pendingOAuth) {
+      sessionStorage.removeItem(OAUTH_PENDING_KEY)
+    }
+  }
+
+  async function signInWithGoogle() {
+    setIsAuthenticating(true)
+    setError(null)
+
+    sessionStorage.setItem(OAUTH_PENDING_KEY, 'signin')
+    const { error: oauthError } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: window.location.origin },
+    })
+
+    if (oauthError) {
+      sessionStorage.removeItem(OAUTH_PENDING_KEY)
+      setError(formatAuthError(oauthError.message))
+      setIsAuthenticating(false)
+    }
+    // On success the browser navigates to Google; this page is unloaded.
+  }
+
+  // Attaches Google to the current anonymous user. The user id is preserved,
+  // so every board and task the guest created carries over.
+  async function upgradeGuestWithGoogle() {
+    setIsAuthenticating(true)
+    setError(null)
+
+    sessionStorage.setItem(OAUTH_PENDING_KEY, 'link')
+    const { error: linkError } = await supabase.auth.linkIdentity({
+      provider: 'google',
+      options: { redirectTo: window.location.origin },
+    })
+
+    if (linkError) {
+      sessionStorage.removeItem(OAUTH_PENDING_KEY)
+      setError(formatAuthError(linkError.message))
+      setIsAuthenticating(false)
+    }
+  }
+
+  async function signOut() {
+    setIsAuthenticating(true)
+    const { error: signOutError } = await supabase.auth.signOut()
+    setIsAuthenticating(false)
+
+    if (signOutError) {
+      setError(`Could not sign out: ${signOutError.message}`)
+      return
+    }
+
+    applySessionUser(null)
+    setWorkspaces([])
+    setWorkspaceRoles({})
+    setPendingInvites([])
+    setTasks([])
+    setActiveWorkspaceId(null)
+    setNotice(null)
+    setError(null)
+    setCurrentView('landing')
   }
 
   async function ensureUserSession(options?: { forceNewGuest?: boolean }) {
@@ -225,9 +340,9 @@ export function useTaskboard() {
       return null
     }
 
-    setUserId(activeUserId)
-    setExistingSessionUserId(activeUserId)
-    setUserEmail(sessionData.session?.user.email ?? null)
+    // Re-read rather than reusing sessionData: an anonymous sign-in above replaces it.
+    const { data: currentSession } = await supabase.auth.getSession()
+    applySessionUser(currentSession.session?.user ?? null)
     return activeUserId
   }
 
@@ -1094,6 +1209,9 @@ export function useTaskboard() {
     isLoading,
     userId,
     userEmail,
+    displayName,
+    isAnonymous,
+    isAuthenticating,
     workspaces,
     personalWorkspaces,
     groupWorkspaces,
@@ -1126,6 +1244,9 @@ export function useTaskboard() {
     openEditTaskModal,
     closeTaskModal,
     bootstrapSession,
+    signInWithGoogle,
+    upgradeGuestWithGoogle,
+    signOut,
     openWorkspace,
     refreshCurrentWorkspace,
     createGroupBoard,
